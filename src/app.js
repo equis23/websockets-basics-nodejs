@@ -13,15 +13,22 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/index.html'));
 });
 
+let socketRoom = '';
+
 io.on('connection', (socket) => {
   io.emit('server:user-connected', socket.id);
+
+  socket.on('client:join-room', (room) => {
+    socket.join(room);
+    socketRoom = room;
+  });
 
   socket.on('disconnect', () => {
     io.emit('server:user-disconnected', socket.id);
   });
 
   socket.on('client:chat-message', (message) => {
-    io.emit('server:chat-message', message);
+    io.to(socketRoom).emit('server:chat-message', message);
   });
 });
 
