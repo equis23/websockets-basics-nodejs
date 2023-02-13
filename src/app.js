@@ -9,26 +9,48 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, '/public')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/public/index.html'));
+app.get('/chat', (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/chat.html'));
 });
 
-let socketRoom = '';
+app.get('/count', (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/count.html'));
+});
 
-io.on('connection', (socket) => {
-  io.emit('server:user-connected', socket.id);
+const chat = io.of('chat');
+
+chat.on('connection', (socket) => {
+  socket.connectedRoom = '';
+
+  chat.emit('server:user-connected', socket.id);
 
   socket.on('client:join-room', (room) => {
+    socket.leave(socket.connectedRoom);
+    socket.connectedRoom = room;
     socket.join(room);
-    socketRoom = room;
   });
 
   socket.on('disconnect', () => {
-    io.emit('server:user-disconnected', socket.id);
+    chat.emit('server:user-disconnected', socket.id);
   });
 
   socket.on('client:chat-message', (message) => {
-    io.to(socketRoom).emit('server:chat-message', message);
+    console.log(socket.connectedRoom);
+    chat.to(socket.connectedRoom).emit('server:chat-message', message);
+  });
+});
+
+const count = io.of('count');
+
+count.on('connection', (socket) => {
+  socket.on('client:minus', (value) => {
+    value = value.trim();
+    count.emit('server:minus', Number.parseInt(value, 10) -1);
+  });
+
+  socket.on('client:plus', (value) => {
+    value = value.trim();
+    count.emit('server:plus', Number.parseInt(value, 10) + 1);
   });
 });
 

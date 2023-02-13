@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chat app with socket.IO</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+    body {
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      padding-bottom: 3rem;
+    }
+    #form {
+      background-color: rgba(0, 0, 0, 0.15);
+      padding: 0.25rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 3rem;
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+    }
+    #input {
+      border: none;
+      padding: 0 1rem;
+      flex-grow: 1;
+      border-radius: 2rem;
+      margin: 0.25rem;
+    }
+    #input:focus {
+      outline: none;
+    }
+    #form > button {
+      background: #333;
+      border: none;
+      padding: 0 1rem;
+      border-radius: 3rem;
+      outline: none;
+      color: #fff;
+      cursor: pointer;
+    }
+    #messages {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #messages > li {
+      padding: 0.5rem 1rem;
+    }
+    #messages > li:nth-child(odd) {
+      background: #efefef;
+    }
+    #toast-container {
+      position: fixed;
+      bottom: 4rem;
+      right: 10px;
+    }
+    .toast {
+      border-radius: 6px;
+      color: #fff;
+      padding: 2rem;
+      margin: 1rem;
+    }
+    .popup-container {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-container.active {
+      display: flex;
+    }
+    .popup {
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+      padding: 2rem;
+      position: relative;
+      width: 500px;
+      display: flex;
+      align-items: center;
+    }
+    .popup > button {
+      background-color: #fff;
+      color: rebeccapurple;
+      font-size: 2rem;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .emoji {
+      background-color: rebeccapurple;
+      margin: 1rem;
+      padding: 1.5rem;
+      font-size: 2rem;
+      border-radius: 4rem;
+      cursor: pointer;
+      transition: background-color 0.6s;
+    }
+    .emoji:hover {
+      background-color: rgb(57, 7, 107);
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      display: flex;
+    }
+    #change-room {
+      cursor: pointer;
+      display: none;
+    }
+    #change-room.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <div id="room"></div>
+    <div id="change-room">🔄</div>
+  </div>
+  <ul id="messages"></ul>
+  <form action="" id="form">
+    <input id="input" type="text" autocomplete="off">
+    <button>send</button>
+  </form>
+  <div id="toast-container"></div>
+  <div class="popup-container" id="container">
+    <div class="popup">
+      <h1>select namespace</h1>
+      <div class="emoji" id="tiger">🐯</div>
+      <div class="emoji" id="bear">🐻</div>
+    </div>
+  </div>
+  <script src='/socket.io/socket.io.js'></script>
+  <script>
+    let socket = io('/chat');
+
+    const popupContainer = document.querySelector('.popup-container');
+    window.addEventListener('DOMContentLoaded', (e) => {
+      e.preventDefault();
+      popupContainer.classList.add('active');
+    });
+
+    const changeRoom = document.querySelector('#change-room');
+    changeRoom.addEventListener('click', (e) => {
+      e.preventDefault();
+      changeRoom.classList.remove('active');
+      popupContainer.classList.add('active');
+    });
+
+    const emojis = document.querySelectorAll('.emoji');
+    emojis.forEach((emoji) => {
+      emoji.addEventListener('click', (e) => {
+        e.preventDefault();
+        socket.emit('client:join-room', emoji.id);
+        popupContainer.classList.remove('active');
+        changeRoom.classList.add('active');
+        document.querySelector('#room').textContent = emoji.textContent;
+      });
+    });
+
+    socket.on('server:chat-message', (message) => {
+      let item = document.createElement('li');
+      item.textContent = message;
+      document.querySelector('#messages').appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    socket.on('server:user-connected', (userId) => {
+      let toast = document.createElement('div');
+      toast.classList.add('toast');
+      toast.style.backgroundColor = 'green';
+      toast.textContent = `welcome ${userId.substring(0, 7)}!`;
+      document.querySelector('#toast-container').appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 2000);
+    });
+
+    socket.on('server:user-disconnected', (userId) => {
+      let toast = document.createElement('div');
+      toast.classList.add('toast');
+      toast.style.backgroundColor = 'tomato';
+      toast.textContent = `bye bye ${userId.substring(0, 7)}!`;
+      document.querySelector('#toast-container').appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 2000);
+    });
+    
+    let form = document.querySelector('#form');
+    let input = document.querySelector('#input');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        socket.emit('client:chat-message', input.value);
+        input.value = '';
+      }
+    });
+  </script>
+</body>
+</html>

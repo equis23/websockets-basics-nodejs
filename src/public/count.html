@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>count</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+    body {
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 600px;
+    }
+    #counter {
+      font-size: 48px;
+      margin-bottom: 18px;
+    }
+    .operations > span {
+      font-size: 48px;
+      margin: 12px;
+      padding: 8px;
+      border-radius: 10px;
+      color: #fff;
+      background-color: rgb(135, 135, 252);
+      transition: background-color 0.4s;
+    }
+    .operations > span:hover {
+      background-color: rgb(54, 54, 247);
+      cursor: pointer;
+    }
+    .operations > span:active {
+      color: #f33750;
+    }
+  </style>
+</head>
+<body>
+  <div id="counter">
+    0
+  </div>
+  <div class="operations">
+    <span id="minus">-</span>
+    <span id="plus">+</span>
+  </div>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let socket = io('/count');
+
+  const counter = document.querySelector('#counter');
+  const minus = document.querySelector('#minus');
+  const plus = document.querySelector('#plus');
+
+  minus.addEventListener('click', (e) => {
+    e.preventDefault();
+    socket.emit('client:minus', counter.textContent);
+  });
+
+  plus.addEventListener('click', (e) => {
+    e.preventDefault();
+    socket.emit('client:plus', counter.textContent);
+  });
+
+  socket.on('server:minus', (value) => {
+    counter.textContent = value;
+  });
+
+  socket.on('server:plus', (value) => {
+    counter.textContent = value;
+  });
+</script>
+</html>
