@@ -56,12 +56,21 @@
 
   minus.addEventListener('click', (e) => {
     e.preventDefault();
-    socket.emit('client:minus', counter.textContent);
+    socket.emit('client:minus');
   });
 
   plus.addEventListener('click', (e) => {
     e.preventDefault();
-    socket.emit('client:plus', counter.textContent);
+    socket.emit('client:plus');
+  });
+
+  socket.on('connect', () => {
+    console.log(`welcome ${socket.id.slice(0, 7)}...`);
+    socket.emit('client:start');
+  });
+
+  socket.on('server:start', (value) => {
+    counter.textContent = value;
   });
 
   socket.on('server:minus', (value) => {

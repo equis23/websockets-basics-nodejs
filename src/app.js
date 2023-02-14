@@ -17,6 +17,10 @@ app.get('/count', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/count.html'));
 });
 
+app.get('/stats', (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/stats.html'));
+});
+
 const chat = io.of('chat');
 
 chat.on('connection', (socket) => {
@@ -40,17 +44,20 @@ chat.on('connection', (socket) => {
   });
 });
 
+let counter = 0;
 const count = io.of('count');
 
 count.on('connection', (socket) => {
-  socket.on('client:minus', (value) => {
-    value = value.trim();
-    count.emit('server:minus', Number.parseInt(value, 10) -1);
+  socket.on('client:start', () => {
+    socket.emit('server:start', counter);
   });
 
-  socket.on('client:plus', (value) => {
-    value = value.trim();
-    count.emit('server:plus', Number.parseInt(value, 10) + 1);
+  socket.on('client:minus', () => {
+    count.emit('server:minus', counter--);
+  });
+
+  socket.on('client:plus', () => {
+    count.emit('server:plus', counter++);
   });
 });
 
