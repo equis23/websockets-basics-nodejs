@@ -5,8 +5,40 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>stats</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+    body {
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 600px;
+    }
+    .info {
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  
+  <div class="info">
+    <p>👁 visitas: <span id="visitas">0</span></p>
+    <p>👥 conectad@s: <span id="conectados">0</span></p>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io('/stats');
+    const visitas = document.querySelector("#visitas");
+    const conectados = document.querySelector("#conectados");
+    console.log({visitas, conectados});
+
+    socket.on("server:actualizar-visitas", (value) => {
+      visitas.innerText = value;
+    });
+
+    socket.on("server:actualizar-conectados", (value) => {
+      conectados.innerText = value;
+    });
+  </script>
 </body>
 </html>

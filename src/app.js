@@ -21,6 +21,10 @@ app.get('/stats', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/stats.html'));
 });
 
+app.get('/follow-rectangle', (req, res) => {
+  res.sendFile(path.join(__dirname, '/public/rectangle.html'));
+});
+
 const chat = io.of('chat');
 
 chat.on('connection', (socket) => {
@@ -48,16 +52,35 @@ let counter = 0;
 const count = io.of('count');
 
 count.on('connection', (socket) => {
-  socket.on('client:start', () => {
-    socket.emit('server:start', counter);
-  });
+  
+  socket.emit('server:actualizar', counter);
 
   socket.on('client:minus', () => {
-    count.emit('server:minus', counter--);
+    counter--;
+    count.emit('server:actualizar', counter);
   });
 
   socket.on('client:plus', () => {
-    count.emit('server:plus', counter++);
+    counter++;
+    count.emit('server:actualizar', counter);
+  });
+});
+
+let visitas = 0;
+let conectados = 0;
+const stats = io.of('stats');
+
+stats.on('connection', (socket) => {
+
+  visitas++;
+  stats.emit('server:actualizar-visitas', visitas);
+
+  conectados++;
+  stats.emit('server:actualizar-conectados', conectados)
+
+  socket.on('disconnect', () => {
+    conectados--;
+    stats.emit('server:actualizar-conectados', conectados)
   });
 });
 

@@ -64,21 +64,8 @@
     socket.emit('client:plus');
   });
 
-  socket.on('connect', () => {
-    console.log(`welcome ${socket.id.slice(0, 7)}...`);
-    socket.emit('client:start');
-  });
-
-  socket.on('server:start', (value) => {
+  socket.on('server:actualizar', (value) => {
     counter.textContent = value;
-  });
-
-  socket.on('server:minus', (value) => {
-    counter.textContent = value;
-  });
-
-  socket.on('server:plus', (value) => {
-    counter.textContent = value;
-  });
+  })
 </script>
 </html>
