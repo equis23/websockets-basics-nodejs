@@ -6,10 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>rectangle</title>
   <style>
-    #rectangle {
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
+    body {
+      font-family: 'DM Sans', sans-serif;
+    }
+    .rectangle {
       position: absolute;
       padding: 10px;
-      background-color: blue;
       color: white;
       border-radius: 5px;
     }
@@ -17,15 +20,27 @@
 </head>
 <body>
   <div id="rectangle"></div>
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const rectangle = document.getElementById('rectangle');
-    function update() {
+    const socket = io('/rectangle');
+    let rectangle;
+    
+    socket.on('server:start', (rgbColor) => {
+      rectangle = document.createElement('div');
+      rectangle.setAttribute('id', socket.id.slice(0, 7));
+      rectangle.classList.add('rectangle');
+      rectangle.style.backgroundColor = rgbColor;
+      rectangle.textContent = socket.id.slice(0, 7);
+      document.body.appendChild(rectangle);
+    });
+    
+    document.addEventListener('mousemove', (event) => {
+      event.preventDefault();
       let mouseX = event.clientX;
       let mouseY = event.clientY;
-      rectangle.style.left = mouseX + 'px';
-      rectangle.style.top = mouseY + 'px';
-    }
-    document.addEventListener('mousemove', update);
+      rectangle.style.left = `${mouseX}px`;
+      rectangle.style.top = `${mouseY}px`;
+    });
   </script>
 </body>
 </html>

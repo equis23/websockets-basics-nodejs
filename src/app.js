@@ -21,10 +21,11 @@ app.get('/stats', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/stats.html'));
 });
 
-app.get('/follow-rectangle', (req, res) => {
+app.get('/rectangle', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/rectangle.html'));
 });
 
+// chat
 const chat = io.of('chat');
 
 chat.on('connection', (socket) => {
@@ -48,6 +49,7 @@ chat.on('connection', (socket) => {
   });
 });
 
+// count
 let counter = 0;
 const count = io.of('count');
 
@@ -66,6 +68,7 @@ count.on('connection', (socket) => {
   });
 });
 
+// stats
 let visitas = 0;
 let conectados = 0;
 const stats = io.of('stats');
@@ -82,6 +85,27 @@ stats.on('connection', (socket) => {
     conectados--;
     stats.emit('server:actualizar-conectados', conectados)
   });
+});
+
+// rectangle
+const rectangle = io.of('rectangle');
+
+const generateRandonInt = (min, max) => {
+  return Math.floor((Math.random() * (max - min + 1)) + min);
+}
+
+const generateRGBColor = () => {
+  const rgb = [];
+  for (let i = 0; i < 3; i++) {
+    rgb.push(generateRandonInt(0, 255));
+  }
+  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+}
+
+rectangle.on('connection', (socket) => {
+
+  rectangle.emit('server:start', generateRGBColor());
+
 });
 
 server.listen(8080, (err) => {
